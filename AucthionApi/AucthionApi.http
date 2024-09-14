@@ -1,0 +1,6 @@
+@AucthionApi_HostAddress = http://localhost:5036
+
+GET {{AucthionApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

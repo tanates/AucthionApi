@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AuctionEntity\AuctionEntity.csproj" />
+    <ProjectReference Include="..\ErrorHendler\ErrorHendler.csproj" />
+	<ProjectReference Include="..\RabbitMQConnection\MQConnection.csproj" />
+  </ItemGroup>
+
+</Project>
