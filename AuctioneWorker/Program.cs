@@ -1,5 +1,6 @@
 using AuctionEntity.Model.DTO;
 using AuctioneWorker;
+using LibMessage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MQConnection;

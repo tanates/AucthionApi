@@ -1,5 +1,6 @@
 ﻿using AuctionEntity.Entity;
 using AuctionEntity.Model.DTO;
+using Newtonsoft.Json;
 using System.Net.Http.Headers;
 
 namespace AuctionEntity.DTO.Req
@@ -24,6 +25,10 @@ namespace AuctionEntity.DTO.Req
                 Discription = entity.Discription,
                 IdLote = entity.IdLote
             };
+        }
+        public static AuctionDTO convertJson(string json )
+        {
+            return JsonConvert.DeserializeObject<AuctionDTO>(json);
         }
 
 

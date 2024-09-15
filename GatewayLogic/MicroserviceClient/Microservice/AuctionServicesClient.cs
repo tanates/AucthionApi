@@ -1,11 +1,17 @@
-﻿using GatewayEntity.DTO.Req.Api;
+﻿using AuctionEntity.DTO.Req;
+using GatewayEntity.DTO.Req.Api;
 using GatewayLogic.MicroserviceClient.Interface;
 using LibMessage;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32.SafeHandles;
 using MQConnection;
 using Newtonsoft.Json;
+using RabbitMQConnection;
+using System.Net.Http;
+using System.Net.Http.Json;
 
 namespace GatewayLogic.MicroserviceClient.Microservice
 {
@@ -13,37 +19,40 @@ namespace GatewayLogic.MicroserviceClient.Microservice
     {
         //private readonly RabbitMQClient _rabbitMQClient;
         private readonly IServiceScopeFactory _scopeFactory;
-        private readonly IConfiguration _configuration;
-        public AuctionServicesClient(IServiceScopeFactory scopeFactory , IConfiguration configuration )
+   
+        public AuctionServicesClient(IServiceScopeFactory scopeFactory )
         {
-            _configuration = configuration;
+          
             _scopeFactory = scopeFactory;
         }
 
         public async Task<string> SendRequestAsync<T>(T model)
         {
-            if (model is AuctionReq message)
+            if (model is AuctionDTO message)
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
-
+                    var ILoggerFactory = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
+                    
+                    var _logger = ILoggerFactory.CreateLogger<AuctionServicesClient>();
+                    var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
                     Console.WriteLine("Message published to request queue");
                     var mProducer = scope.ServiceProvider.GetRequiredService<IMessageProducer>();
-                    var config = _configuration.GetSection("AuctionRabbitSettings").GetChildren();
-
+                    var config = configuration.GetSection("StartRabbitSettings");
+                     
 
                     var iMessage = scope.ServiceProvider.GetRequiredService<IMessageService>();
                     var r = JsonConvert.SerializeObject(message);
 
-
+                    var con =scope.ServiceProvider.GetRequiredService<IRabbitConnection>();
                     iMessage.StoreMessage(r);
-                    var resSend = await mProducer.Send(config, iMessage.RetrieveMessage());
-                    var res = iMessage.RetrieveMessage();
-                    if (res == null)
-                    {
-
-                    }
-                    return res ?? "No response from service";
+                    var resSend = await mProducer.Send(config, r, con);
+                    
+                   
+                    
+                    _logger.LogInformation(resSend.Message , resSend.IsSuccses);
+            
+                    return resSend.Message ?? "No response from service";
                 }
             }
             return null;

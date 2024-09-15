@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MQConnection.DTO;
@@ -21,19 +22,20 @@ namespace MQConnection
 {
     public interface IMessageProducer
     {
-        public  Task<(bool IsSuccses, string Message)> Send<T>(IEnumerable<IConfigurationSection> configurations, T message);
+        public  Task<(bool IsSuccses, string Message)> Send<T>(IConfigurationSection configurations, T message, IRabbitConnection connection);
         public void ReceiveAsync(IEnumerable<IConfigurationSection> configurations);
 
     }
 
     public class RabbitProducer : IMessageProducer 
     {
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly IRabbitConnection _connection;
         private readonly ILogger _logger; 
-        public RabbitProducer(IRabbitConnection connection, ILoggerFactory loggerFactory)
+        public RabbitProducer( ILoggerFactory loggerFactory, IServiceScopeFactory serviceScopeFactory)
         {
             _logger = loggerFactory.CreateLogger<RabbitProducer>();
-            _connection=connection;
+            _serviceScopeFactory = serviceScopeFactory; 
         }
 
         public void ReceiveAsync(IEnumerable<IConfigurationSection> configurations )
@@ -68,43 +70,34 @@ namespace MQConnection
         }
 
 
-        public async Task <(bool IsSuccses ,string Message)>  Send<T>(IEnumerable<IConfigurationSection> configurations , T message)
+        public  async Task<(bool IsSuccses, string Message)> Send<T>(IConfigurationSection configurations, T message , IRabbitConnection connection)
         {
-            using var channel = _connection.Connection.CreateModel();
-
             try
             {
-                var tcs = new TaskCompletionSource<Task>();
-
                 var settings = ConnectionSettingsDTO.GetSettingsDTO(configurations);
+                using var scope = _serviceScopeFactory.CreateScope();
+                //var connection = scope.ServiceProvider.GetRequiredService<IRabbitConnection>(); 
+                using var channel = connection.Connection.CreateModel();
 
+              
+                channel.QueueDeclare(queue: settings.QueueName,
+                                      durable: true,
+                                      exclusive: false,
+                                      autoDelete: false,
+                                      arguments: null);
 
-
-                channel.ExchangeDeclare(
-                    exchange: settings.Exchange,
-                    type: settings.ExType,
-                    durable: settings.Durable,
-                    autoDelete: settings.AutoDelete,
-                    arguments: settings.Arguments);
-
-
-                var body = Encoding.UTF8.GetBytes(
-                    JsonConvert.SerializeObject(message));
-                
+                var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
                 channel.BasicPublish(settings.Exchange, settings.KeyQ, null, body);
-                await Task.Delay(1000);
-                var r = tcs.Task.Result;
-                
+
                 _logger.LogInformation("Result send : true \n Message : " + message);
-                return (true, "message send to RabbitMQ. Message :" + message);
-                
+                return (true, "Message sent to RabbitMQ. Message: " + message);
             }
             catch (Exception ex)
             {
-                return  ( false,  ex.Message );
+                return (false, ex.Message);
             }
         }
 
-        
+
     }
 }

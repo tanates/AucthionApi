@@ -42,6 +42,11 @@ namespace MQConnection.DTO
 
         public static ConnectionSettingsDTO GetSettingsDTO<T>(T settingJson ) 
         {
+            if(settingJson is IConfigurationSection ss)
+            {
+                var z = JsonConvert.SerializeObject(ss.GetChildren().ToDictionary(x => x.Key, x => x.Value));
+                return JsonConvert.DeserializeObject<ConnectionSettingsDTO>(z);
+            }
             if (settingJson is IEnumerable<IConfigurationSection> config )
             {
                 var z = JsonConvert.SerializeObject(config.ToDictionary(x => x.Key, x => x.Value));

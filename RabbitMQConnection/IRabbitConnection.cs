@@ -33,8 +33,10 @@ namespace RabbitMQConnection
                 Uri = new Uri("amqps://xyagawfh:ucohri2GZ4TE5TYNqBQpxLkXDJQ5PeIo@jackal.rmq.cloudamqp.com/xyagawfh")
 
             };
-          
-           
+            _connection = factory.CreateConnection();
+            
+
+
         }
 
         public IConnection Connection => _connection! ;

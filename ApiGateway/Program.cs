@@ -5,6 +5,7 @@ using LibMessage;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi.Writers;
 using MQConnection;
 using MQConnection.DTO;
 using RabbitMQConnection;
@@ -27,7 +28,7 @@ services.AddSwaggerGen();
 services.AddSingleton<IRabbitConnection>(new RabbitConnection());
 services.AddSingleton<IMessageProducer, RabbitProducer>();
 services.AddSingleton<IConfigServisec>(new ConnectionSettingsDTO(builder.Configuration.GetSection("StartRabbitSettings")));
-
+services.AddHttpClient();
 services.AddSingleton<IMicroserviceClient, AuctionServicesClient>();
 services.AddSingleton<Gateway>();
 services.AddSingleton<RabbitMQServisec>();
@@ -40,9 +41,14 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     
+
+
     app.UseSwagger();
     app.UseSwaggerUI();
+    
 }
+
+
 
 app.UseHttpsRedirection();
 app.UseAuthorization();

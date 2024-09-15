@@ -65,19 +65,9 @@ namespace MQConnection
         public async Task Init()
         {
 
-
-            var factory = new ConnectionFactory
-            {
-                HostName = "jackal-01.rmq.cloudamqp.com",
-                VirtualHost = "xyagawfh",
-                Port =  5672,
-                UserName ="xyagawfh",
-                Password = "ucohri2GZ4TE5TYNqBQpxLkXDJQ5PeIo",
-                Uri = new Uri("amqps://xyagawfh:ucohri2GZ4TE5TYNqBQpxLkXDJQ5PeIo@jackal.rmq.cloudamqp.com/xyagawfh")
-
-            };
-         
-             _connection = factory.CreateConnection();
+            using var scope = _serviceProvider.CreateScope();
+            var con  = scope.ServiceProvider.GetRequiredService<IRabbitConnection>();
+            _connection  = con.Connection;
             _channel = _connection.CreateModel();
             
             // Убедитесь, что обменник существует
@@ -144,6 +134,7 @@ namespace MQConnection
                     {
                         var content = Encoding.UTF8.GetString(message.Body.ToArray());
                         tcs.SetResult(content);
+                        
                         _channel.BasicAck(message.DeliveryTag, false);
                         _logger.LogInformation($"Received {message.DeliveryTag}" + $"\n Message : {content}" + $"\n Scope : {_serviceProvider.GetType().Name}");
                     }
