@@ -27,9 +27,9 @@ namespace ApiGateway.Controllers
             }
 
                 var res = await _gateway.ProcessRequest(model);
-            if (res?.Data == null)
+            if (!res.IsSuccess)
             {
-                return BadRequest("ProcessRequest error");
+                return BadRequest(res);
             }
 
             return Ok(res);

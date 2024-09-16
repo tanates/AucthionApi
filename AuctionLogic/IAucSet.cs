@@ -4,6 +4,7 @@ using AuctionEntity.Model.DTO;
 using AuctionEntity.Model.DTO.ErrorDTO;
 using AuctionLogic.Services;
 using AuctionLogic.Servisec;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using System;
@@ -17,7 +18,7 @@ namespace AuctionLogic
 {
     public  interface IAucSet
     {
-        public Task<BaseDto<Dictionary<string, object>>> startAuction(AuctionDTO Model);
+        public Task<(bool IsSuccess, string Data)> startAuction(AuctionDTO Model);
         public Task<Dictionary<string, object>> stopAuctionById(Guid id);
         public Task<Dictionary<string, object>> setPriceLote<T>(T Model);
         public Task<Dictionary<string, object>> stopAuctionWhereTimeIsNull(Guid id);
@@ -40,7 +41,7 @@ namespace AuctionLogic
             throw new NotImplementedException();
         }
 
-        public async  Task<BaseDto<Dictionary<string, object>>> startAuction(AuctionDTO model)
+        public async Task<(bool IsSuccess, string Data )> startAuction(AuctionDTO model)
         {
             try
             {
@@ -56,28 +57,17 @@ namespace AuctionLogic
                     var creat = await _acuctioneServisec.SetEntity(model);
                     if (!creat.isSuccess)
                     {
-                        return new BaseDto<Dictionary<string, object>>
-                        {
-
-                            ErrorDto =  new ErrorHandlerDTO<Dictionary<string, object>>(new Dictionary<string, object>(), creat.isSuccess, creat.message)
-
-
-                        };
+                        return  ( IsSuccess: creat.isSuccess, Data: creat.message );
 
                     }
 
-                    return new BaseDto<Dictionary<string, object>>(new Dictionary<string, object> { { "message", creat.message }, { "result", creat.isSuccess } });
+                    return (IsSuccess: creat.isSuccess, Data: creat.message);
 
                 }
             }
             catch (Exception ex)
             {
-                return new BaseDto<Dictionary<string, object>>
-                {
-
-                    ErrorDto =  new ErrorHandlerDTO<Dictionary<string, object>>(new Dictionary<string, object>(), false, ex.Message)
-
-                };
+                return (IsSuccess: false, Data: ex.Message);
             }
         }
 

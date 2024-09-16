@@ -14,14 +14,6 @@ namespace GatewayEntity.DTO.Req.Api
 
         public Dictionary<string ,string> Data { get; set; }
 
-        public static ReqFromClient addData(string data)
-        {
-            var dataDictionary = new Dictionary<string, string>
-            {
-                { "Key" , data}
-            };
-            
-            return new ReqFromClient { Data = dataDictionary };
-        }
+         
     }
 }

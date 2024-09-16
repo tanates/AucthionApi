@@ -1,5 +1,6 @@
 ﻿using AuctionEntity.DTO.Req;
 using AuctionEntity.Interface;
+using AuctionEntity.Model.Context;
 using AuctionEntity.Model.DTO;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,10 +25,10 @@ namespace AuctionLogic.Services
     {
       
         private readonly IServiceProvider _serviceProvider;
-        private readonly ILogger _logger;
-        public AuctionServices(IServiceProvider serviceProvider,   ILoggerFactory logger)
+ 
+        public AuctionServices(IServiceProvider serviceProvider )
         {
-            _logger = logger.CreateLogger(typeof(AuctionServices));
+            
             _serviceProvider=serviceProvider;
         }
 
@@ -37,7 +38,7 @@ namespace AuctionLogic.Services
            
             
             var _acuctioneRepository = scope.ServiceProvider.GetRequiredService<IAuctionRepository>();
-            var _configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+            var _logger = scope.ServiceProvider.GetRequiredService<ILogger<AuctionServices>>();
 
             var res = await _acuctioneRepository.Delete(idObject);
             _logger.LogInformation($"---Send to message {res}");
@@ -56,10 +57,10 @@ namespace AuctionLogic.Services
             using var scope = _serviceProvider.CreateScope();
 
             var _acuctioneRepository = scope.ServiceProvider.GetRequiredService<IAuctionRepository>();
-            
+
+            var _logger = scope.ServiceProvider.GetRequiredService<ILogger<AuctionServices>>();
 
 
-           
             var res = await _acuctioneRepository.GetById(idObject);
             if (res == null)
                 throw new Exception("");
@@ -81,8 +82,8 @@ namespace AuctionLogic.Services
 
             var _acuctioneRepository = scope.ServiceProvider.GetRequiredService<IAuctionRepository>();
 
+            var _logger = scope.ServiceProvider.GetRequiredService<ILogger<AuctionServices>>();
 
-            
             var res = await _acuctioneRepository.GetAll();
 
             if (res == null)
@@ -108,13 +109,13 @@ namespace AuctionLogic.Services
             using var scope = _serviceProvider.CreateScope();
             
             var _acuctioneRepository = scope.ServiceProvider.GetRequiredService<IAuctionRepository>();
-            
 
-            
-            if (modelReq is ReqFromGateway req)
+            var _logger = scope.ServiceProvider.GetRequiredService<ILogger<AuctionServices>>();
+
+            if (modelReq is AuctionDTO req)
             {
                 
-                var res = await _acuctioneRepository.Creat(req.AuctionDTO);
+                var res = await _acuctioneRepository.Creat(req);
                 
                 if (!res.ErrorDto.Result)
                 {

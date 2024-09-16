@@ -1,6 +1,8 @@
 ﻿using Api.Masstransit.Event;
 using AuctionEntity.DTO.Req;
+using AuctionEntity.Interface;
 using AuctionLogic;
+using AuctionLogic.Services;
 using MassTransit;
 using MassTransit.Metadata;
 using Microsoft.AspNetCore.Identity;
@@ -30,13 +32,28 @@ namespace AuctioneWorker.Consumer
                 var timer = Stopwatch.StartNew();
                 try
                 {
+                    scope.ServiceProvider.GetRequiredService<IAcuctioneServices>();
+                    scope.ServiceProvider.GetRequiredService<IAuctionRepository>();
                     var _aucServisec = scope.ServiceProvider.GetRequiredService<IAucSet>();
                     var msg = JsonConvert.SerializeObject(context.Message);
                     var aucDto = JsonConvert.DeserializeObject<AuctionDTO>(msg);
+                   
+                    
                     var _logger = scope.ServiceProvider.GetRequiredService<ILogger<QueueAuctionStartedConsumer>>();
-                    var res = _aucServisec.startAuction(aucDto);
-                    await context.Publish(res);
-                    await context.NotifyConsumed(timer.Elapsed, TypeMetadataCache<StartAuction>.ShortName);
+                    var res = await  _aucServisec.startAuction(aucDto);
+
+
+                    var responserGateway = new StartAuction
+                    {
+                        ResponseGateway =  StartAuction.SetGateway(res.IsSuccess, res.Data),
+                    };
+
+                  
+                    
+                    await context.RespondAsync(responserGateway);
+                        
+
+                    await context.NotifyConsumed(timer.Elapsed, TypeMetadataCache<StartAuction >.ShortName);
                 }
                 catch (Exception ex)
                 {
@@ -51,7 +68,7 @@ namespace AuctioneWorker.Consumer
     {
         protected override void ConfigureConsumer(IReceiveEndpointConfigurator endpointConfigurator, IConsumerConfigurator<QueueAuctionStartedConsumer> consumerConfigurator, IRegistrationContext context)
         {
-            consumerConfigurator.UseMessageRetry(retry => retry.Interval(3, TimeSpan.FromSeconds(3)));
+            consumerConfigurator.UseMessageRetry(retry => retry.Interval(3, TimeSpan.FromSeconds(5)));
 
         }
 

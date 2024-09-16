@@ -12,14 +12,14 @@ public class Gateway
 
     }
 
-    public async Task<ReqFromClient> ProcessRequest(ReqFromClient model)
+    public async Task<ResponseGateway> ProcessRequest(ReqFromClient model)
     {
         if (_microservices.TryGetValue(model.ServisecName, out var microserviceClient))
         {
-            var auctionStart = StartAuction.Start(model.Data);
+             var auctionStart = StartAuction.Start(model.Data);
              var response = await microserviceClient.SendRequestAsync(auctionStart);
      
-            return ReqFromClient.addData(response);
+            return response;
         }
 
         return null;
