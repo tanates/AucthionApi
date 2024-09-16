@@ -1,4 +1,5 @@
 ﻿
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,16 @@ namespace GatewayEntity.DTO.Req.Api
     {
         public string ServisecName { get; set; }
 
-        public object Data { get; set; }
+        public Dictionary<string ,string> Data { get; set; }
+
+        public static ReqFromClient addData(string data)
+        {
+            var dataDictionary = new Dictionary<string, string>
+            {
+                { "Key" , data}
+            };
+            
+            return new ReqFromClient { Data = dataDictionary };
+        }
     }
 }

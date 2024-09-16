@@ -1,28 +1,64 @@
-using AuctionEntity.Model.DTO;
-using AuctioneWorker;
-using LibMessage;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using MQConnection;
-using RabbitMQConnection;
+using Api.Masstransit.Event;
+using Api.Masstransit.Extensions;
+using AuctioneWorker.Consumer;
+using AuctionLogic;
+using AuctionLogic.Services;
+using MassTransit;
+using Microsoft.AspNetCore.Builder;
+using Serilog;
 
-var builder = Host.CreateApplicationBuilder(args);
-var services = builder.Services;
-services.AddOptions();
-builder.Logging.AddConsole();
-builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+try
+{
+    var builder = WebApplication.CreateBuilder(args);
 
 
-builder.Services.AddHostedService<RabbitMQServisec>();
+    builder.AddSerilog("Worker MassTransit");
 
-IHost host = Host.CreateDefaultBuilder(args)
-    .ConfigureServices(services =>
-    {
+    var services = builder.Services;
 
-        services.AddSingleton<IServiceScopeFactory>();
-        services.AddHostedService<RabbitMQServisec>();
-        
-    })
-    .Build();
 
-host.Run();
+
+    builder.AddSerilog("Worker MassTransit");
+    Log.Information("Starting Worker");
+
+    var host = Host.CreateDefaultBuilder(args)
+        .UseSerilog(Log.Logger)
+        .ConfigureServices((context, collection) =>
+        {
+            var appSettings = new AppSettings();
+            context.Configuration.Bind(appSettings);
+            collection.AddScoped<IAcuctioneServices, AuctionServices>();
+            collection.AddScoped<IAucSet, MainAuct>();
+            collection.AddOpenTelemetry(appSettings);
+            collection.AddHttpContextAccessor();
+            collection.AddMassTransit(x =>
+            {
+
+                x.AddDelayedMessageScheduler();
+                x.AddConsumer<QueueAuctionStartedConsumer>(typeof(QueueAuctionConsumerDefinition));
+
+                x.AddRequestClient<StartAuction>();
+                x.SetKebabCaseEndpointNameFormatter();
+                x.UsingRabbitMq((ctx, cfg) =>
+                {
+                    cfg.Host(context.Configuration.GetConnectionString("RabbitMq"));
+                    cfg.UseDelayedMessageScheduler();
+                    cfg.ServiceInstance(instance =>
+                    {
+                        instance.ConfigureJobServiceEndpoints();
+                        instance.ConfigureEndpoints(ctx, new KebabCaseEndpointNameFormatter("dev", false));
+                    });
+                });
+            });
+        }).Build();
+    await host.RunAsync();  
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Host terminated unexpectedly");
+}
+finally
+{
+    Log.Information("Server Shutting down...");
+    Log.CloseAndFlush();
+}

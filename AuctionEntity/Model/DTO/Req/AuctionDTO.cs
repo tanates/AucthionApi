@@ -1,5 +1,6 @@
 ﻿using AuctionEntity.Entity;
 using AuctionEntity.Model.DTO;
+using MassTransit;
 using Newtonsoft.Json;
 using System.Net.Http.Headers;
 

@@ -1,17 +1,10 @@
-﻿using AuctionEntity.DTO.Req;
-using GatewayEntity.DTO.Req.Api;
+﻿using Api.Masstransit.Event;
+using Api.Masstransit.Extensions;
 using GatewayLogic.MicroserviceClient.Interface;
-using LibMessage;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
+using MassTransit;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Win32.SafeHandles;
-using MQConnection;
-using Newtonsoft.Json;
-using RabbitMQConnection;
-using System.Net.Http;
-using System.Net.Http.Json;
 
 namespace GatewayLogic.MicroserviceClient.Microservice
 {
@@ -26,34 +19,35 @@ namespace GatewayLogic.MicroserviceClient.Microservice
             _scopeFactory = scopeFactory;
         }
 
-        public async Task<string> SendRequestAsync<T>(T model)
+        public async Task<string> SendRequestAsync<T>([FromBody]T model)
         {
-            if (model is AuctionDTO message)
+            if (model is StartAuction message)
             {
-                using (var scope = _scopeFactory.CreateScope())
+               
+                   using  (var scope = _scopeFactory.CreateScope())
                 {
-                    var ILoggerFactory = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
-                    
-                    var _logger = ILoggerFactory.CreateLogger<AuctionServicesClient>();
-                    var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
-                    Console.WriteLine("Message published to request queue");
-                    var mProducer = scope.ServiceProvider.GetRequiredService<IMessageProducer>();
-                    var config = configuration.GetSection("StartRabbitSettings");
-                     
+                    var _publisher = scope.ServiceProvider.GetRequiredService<IPublishEndpoint>();
+                    var _reseive = scope.ServiceProvider.GetRequiredService<ReceiveObserverExtensions>();
+                    var _logger = scope.ServiceProvider.GetRequiredService<ILogger<AuctionServicesClient>>();
 
-                    var iMessage = scope.ServiceProvider.GetRequiredService<IMessageService>();
-                    var r = JsonConvert.SerializeObject(message);
+                    try
+                    { 
+                        await _publisher.Publish(message);
+                        _logger.LogInformation($"Send client inserted: {message.Id} - {message.Name}");
+                        
+                        return $"{message.Id}" ?? "No response from service";
+                    }
+                    catch (Exception ex)
+                    {
 
-                    var con =scope.ServiceProvider.GetRequiredService<IRabbitConnection>();
-                    iMessage.StoreMessage(r);
-                    var resSend = await mProducer.Send(config, r, con);
-                    
-                   
-                    
-                    _logger.LogInformation(resSend.Message , resSend.IsSuccses);
-            
-                    return resSend.Message ?? "No response from service";
+                        _logger.LogInformation($"Send client inserted: {message.Id} - {message.Name}");
+                        return $"" ?? $"{ex.Message}";
+                    }
+
                 }
+
+
+                
             }
             return null;
                 

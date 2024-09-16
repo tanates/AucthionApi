@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace AuctionLogic.Servisec
 {
-     public interface ILoteServisec
+     public interface ILoteServices
     {
         public Task<BaseDto<LoteDTO>> DeleteEntity(Guid idObject);
 
@@ -23,7 +23,7 @@ namespace AuctionLogic.Servisec
      
     }
 
-    public class AuctionLote : ILoteServisec
+    public class AuctionLote : ILoteServices
     {
         private readonly ILoteRepository _loteRepository;
         public AuctionLote(ILoteRepository acuctioneRepository)

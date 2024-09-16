@@ -1,56 +1,66 @@
-using GatewayLogic;
+using Api.Masstransit.Extensions;
 using GatewayLogic.MicroserviceClient.Interface;
 using GatewayLogic.MicroserviceClient.Microservice;
-using LibMessage;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.OpenApi.Writers;
-using MQConnection;
-using MQConnection.DTO;
-using RabbitMQConnection;
+using MassTransit;
+using Serilog;
+
+try
+    {
 
 
-var builder = WebApplication.CreateBuilder(args);
+    var builder = WebApplication.CreateBuilder(args);
+    builder.AddSerilog("API MassTransit");
+    Log.Information("Starting API");
+    var appSetting = new AppSettings();
+    builder.Configuration.Bind(appSetting);
+
+    var services = builder.Services;
+
+    services.AddRouting(options => options.LowercaseUrls = true);
+
+    services.AddControllers();
+    services.AddOpenTelemetry(appSetting);
+
+    
+
+    services.AddMassTransitExtension(builder.Configuration);
+    services.AddSingleton<IMicroserviceClient, AuctionServicesClient>();
 
 
-var services = builder.Services;
+
+    services.AddSwaggerGen();
+
+
+    services.AddSingleton<Gateway>();
 
 
 
-builder.Services.AddOptions();
-builder.Logging.AddConsole();
-builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
-services.AddControllers();
-services.AddEndpointsApiExplorer();
-services.AddSwaggerGen();
-services.AddSingleton<IRabbitConnection>(new RabbitConnection());
-services.AddSingleton<IMessageProducer, RabbitProducer>();
-services.AddSingleton<IConfigServisec>(new ConnectionSettingsDTO(builder.Configuration.GetSection("StartRabbitSettings")));
-services.AddHttpClient();
-services.AddSingleton<IMicroserviceClient, AuctionServicesClient>();
-services.AddSingleton<Gateway>();
-services.AddSingleton<RabbitMQServisec>();
-services.AddHostedService<RabbitMQServisec>();
-services.AddTransient<IMessageService, MessageService>();
+    var app = builder.Build();
 
-
-var app = builder.Build();
-
-if (app.Environment.IsDevelopment())
-{
+    if (app.Environment.IsDevelopment())
+    {
     
 
 
     app.UseSwagger();
     app.UseSwaggerUI();
     
-}
+    }
 
 
 
-app.UseHttpsRedirection();
-app.UseAuthorization();
-app.MapControllers();
-app.Run();
+
+    app.MapControllers();
+    await app.RunAsync();
+    }
+    catch (Exception ex )
+    {
+
+    Log.Fatal(ex, "Host terminated unexpectedly");
+    }
+    finally
+    {
+    Log.Information("Server Shutting down...");
+    Log.CloseAndFlush();
+    }

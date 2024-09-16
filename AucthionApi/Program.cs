@@ -11,10 +11,13 @@ using Microsoft.VisualBasic;
 using MQConnection;
 using MQConnection.DTO;
 using RabbitMQConnection;
+using Serilog;
 
 
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Add
+Log.Information("Starting API");
 var services = builder.Services;
 
 

@@ -2,8 +2,8 @@
 using AuctionEntity.Interface;
 using AuctionEntity.Model.DTO;
 using AuctionEntity.Model.DTO.ErrorDTO;
+using AuctionLogic.Services;
 using AuctionLogic.Servisec;
-using LibMessage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using System;
@@ -17,7 +17,7 @@ namespace AuctionLogic
 {
     public  interface IAucSet
     {
-        public Task<BaseDto<Dictionary<string, object>>> startAuction(ReqFromGateway Model);
+        public Task<BaseDto<Dictionary<string, object>>> startAuction(AuctionDTO Model);
         public Task<Dictionary<string, object>> stopAuctionById(Guid id);
         public Task<Dictionary<string, object>> setPriceLote<T>(T Model);
         public Task<Dictionary<string, object>> stopAuctionWhereTimeIsNull(Guid id);
@@ -40,20 +40,20 @@ namespace AuctionLogic
             throw new NotImplementedException();
         }
 
-        public async  Task<BaseDto<Dictionary<string, object>>> startAuction(ReqFromGateway model)
+        public async  Task<BaseDto<Dictionary<string, object>>> startAuction(AuctionDTO model)
         {
             try
             {
                 using (var scope = _serviceScopeFactory.CreateScope())
                 {
-                    var _acuctioneServisec = scope.ServiceProvider.GetRequiredService<IAcuctioneServisec>();
-                    var _message = scope.ServiceProvider.GetRequiredService<IMessageService>();
+                    var _acuctioneServisec = scope.ServiceProvider.GetRequiredService<IAcuctioneServices>();
+                    
 
                     
                     if (model == null) throw new ArgumentNullException("model");
 
-                    var data = model.Data;
-                    var creat = await _acuctioneServisec.SetEntity(model.AuctionDTO);
+                    
+                    var creat = await _acuctioneServisec.SetEntity(model);
                     if (!creat.isSuccess)
                     {
                         return new BaseDto<Dictionary<string, object>>
@@ -87,8 +87,7 @@ namespace AuctionLogic
         {
             using (var scope = _serviceScopeFactory.CreateScope())
             {
-                var _acuctioneServisec = scope.ServiceProvider.GetRequiredService<IAcuctioneServisec>();
-                var _message = scope.ServiceProvider.GetRequiredService<IMessageService>();
+                var _acuctioneServisec = scope.ServiceProvider.GetRequiredService<IAcuctioneServices>();
 
                 var res = await _acuctioneServisec.GetEntity(id);
 

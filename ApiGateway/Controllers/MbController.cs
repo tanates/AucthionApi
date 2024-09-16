@@ -19,14 +19,14 @@ namespace ApiGateway.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> SendToApi(ReqFromClient model)
+        public async Task<ActionResult> SendToApi([FromBody]ReqFromClient model)
         {
             if (model == null)
             {
                 return BadRequest("Model is null");
             }
 
-            var res = await _gateway.ProcessRequest(model);
+                var res = await _gateway.ProcessRequest(model);
             if (res?.Data == null)
             {
                 return BadRequest("ProcessRequest error");
