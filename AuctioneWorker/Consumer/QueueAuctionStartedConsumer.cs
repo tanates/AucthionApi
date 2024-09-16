@@ -35,9 +35,10 @@ namespace AuctioneWorker.Consumer
                     scope.ServiceProvider.GetRequiredService<IAcuctioneServices>();
                     scope.ServiceProvider.GetRequiredService<IAuctionRepository>();
                     var _aucServisec = scope.ServiceProvider.GetRequiredService<IAucSet>();
+                    JsonConvert.DefaultSettings()
                     var msg = JsonConvert.SerializeObject(context.Message);
                     var aucDto = JsonConvert.DeserializeObject<AuctionDTO>(msg);
-                   
+                    
                     
                     var _logger = scope.ServiceProvider.GetRequiredService<ILogger<QueueAuctionStartedConsumer>>();
                     var res = await  _aucServisec.startAuction(aucDto);
@@ -68,7 +69,7 @@ namespace AuctioneWorker.Consumer
     {
         protected override void ConfigureConsumer(IReceiveEndpointConfigurator endpointConfigurator, IConsumerConfigurator<QueueAuctionStartedConsumer> consumerConfigurator, IRegistrationContext context)
         {
-            consumerConfigurator.UseMessageRetry(retry => retry.Interval(3, TimeSpan.FromSeconds(5)));
+            consumerConfigurator.UseMessageRetry(retry => retry.Interval(3, TimeSpan.FromSeconds(20)));
 
         }
 

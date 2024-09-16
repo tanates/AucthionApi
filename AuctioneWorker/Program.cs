@@ -41,9 +41,9 @@ try
 
                 x.AddDelayedMessageScheduler();
                 x.AddConsumer<QueueAuctionStartedConsumer>(typeof(QueueAuctionConsumerDefinition));
-
+                x.AddConsumer<>
                 x.AddRequestClient<StartAuction >();
-                
+                x.AddRequestClient<CreatLote>();
                 x.SetKebabCaseEndpointNameFormatter();
                 x.UsingRabbitMq((ctx, cfg) =>
                 {

@@ -11,13 +11,27 @@ namespace Api.Masstransit.Event
 {
     public class StartAuction
     {
-        public Guid Id { get; set; }
+        public StartAuction(CreatLote lote , StartAuction startAuction)
+        {
+            Id=startAuction.Id;
+            Name=startAuction.Name;
+            EndTime=startAuction.EndTime;
+            IdOwner=startAuction.IdOwner ;
+            Discription=startAuction.Discription;
+            LotID=lote.Id;
+        }
+
+        public StartAuction()
+        {
+        }
+
+        public Guid Id { get; set; } =  Guid.NewGuid();
         public string Name { get; set; }
         public DateTime EndTime { get; set; }
         public Guid IdOwner { get; set; }
         public string Discription { get; set; }
-        public Guid IdLote { get; set; }
-        public ResponseGateway ResponseGateway { get; set ; }
+        public Guid ? LotID { get; set; }
+        public ResponseGateway? ResponseGateway { get; set ; }
         public static StartAuction Start(Dictionary<string, string> data)
         {
             var str = JsonConvert.SerializeObject(data);
@@ -29,6 +43,13 @@ namespace Api.Masstransit.Event
 
         }
 
+        public  static StartAuction SetLot(string jsonString)
+        {
+            var jsonObject = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonString);
+            var Auction = JsonConvert.DeserializeObject<StartAuction>(jsonObject["auction"].ToString());
+            var  Lot = JsonConvert.DeserializeObject<CreatLote>(jsonObject["lot"].ToString());
+            return  new StartAuction(Lot, Auction);
+        }
         public static ResponseGateway SetGateway(bool res, string massenge)
         {
             return new ResponseGateway { Data = massenge, IsSuccess = res };

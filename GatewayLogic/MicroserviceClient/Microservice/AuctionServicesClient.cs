@@ -40,7 +40,10 @@ namespace GatewayLogic.MicroserviceClient.Microservice
                     {
 
                        //  var r = await _publisher.Publish<StartAuction>(message);
-                       
+                       if(message.LotID ==null)
+                        {
+
+                        }
                        var response = await _requestClient.GetResponse<StartAuction >(message);
                         _logger.LogInformation($"Send client inserted: {message.Id} - {message.Name}");
                         
