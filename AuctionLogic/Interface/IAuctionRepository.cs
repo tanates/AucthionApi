@@ -1,4 +1,4 @@
-﻿
+
 
 using AuctionEntity.DTO.Req;
 using AuctionEntity.Entity;
@@ -32,7 +32,7 @@ namespace AuctionEntity.Interface
         {
             this.auctionDbContex=auctionDbContex;
         }
-
+//scope AuctiDTO ?
         public async Task<BaseDto<AuctionDTO>> Creat<T>(T reqAuc)
         {
             if (reqAuc is AuctionDTO reqFromGateway)
