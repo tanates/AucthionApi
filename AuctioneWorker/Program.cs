@@ -27,7 +27,7 @@ try
     var host = Host.CreateDefaultBuilder(args)
         .UseSerilog(Log.Logger)
         .ConfigureServices((context, collection) =>
-        {
+        { // need scoped for imicroservices
             var appSettings = new AppSettings();
             context.Configuration.Bind(appSettings);
             collection.AddScoped<IAuctionRepository, AuctionRepository>();
@@ -41,7 +41,7 @@ try
 
                 x.AddDelayedMessageScheduler();
                 x.AddConsumer<QueueAuctionStartedConsumer>(typeof(QueueAuctionConsumerDefinition));
-                x.AddConsumer<>
+                x.AddConsumer<>// deleted this string 
                 x.AddRequestClient<StartAuction >();
                 x.AddRequestClient<CreatLote>();
                 x.SetKebabCaseEndpointNameFormatter();
